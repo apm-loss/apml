@@ -1,69 +1,78 @@
 import torch
-from torch import nn
-from torch import Tensor
+from torch import nn, Tensor
 
 
 class AdaptiveProbabilisticMatchingLoss(nn.Module):
     """
     Adaptive Probabilistic Matching Loss (APML) for 3D point cloud comparison.
-    Computes a differentiable approximation of Earth Mover's Distance using Sinkhorn iterations
-    and probabilistic sharpening with sparse matching constraints.
+    Approximates optimal transport using a temperature-scaled softmin that ensures
+    a minimum assignment probability, followed by Sinkhorn normalization.
     """
 
-    def __init__(
-        self,
-        tau: float = 0.01,
-        sinkhorn_iters: int = 5,
-        eps: float = 1e-5,
-        top_k: int = 5,
-        sharpness: float = 0.5,
-    ):
+    def __init__(self, min_softmax_value: float = 0.8, eps: float = 1e-8):
         super().__init__()
-        self.tau = tau
-        self.sinkhorn_iters = sinkhorn_iters
+        self.min_softmax_value = min_softmax_value
         self.eps = eps
-        self.top_k = top_k
-        self.sharpness = sharpness
 
     @torch.no_grad()
-    def _sinkhorn_iterations(self, sim_matrix: Tensor) -> Tensor:
-        """Performs Sinkhorn normalization over a similarity matrix."""
-        P = sim_matrix.clone()
-        for _ in range(self.sinkhorn_iters):
-            P = P / (P.sum(dim=2, keepdim=True) + self.eps)  # Normalize rows
-            P = P / (P.sum(dim=1, keepdim=True) + self.eps)  # Normalize columns
+    def _softmin_with_min_probability(self, cost: Tensor, dim: int = 2, margin: float = 1e-8) -> Tensor:
+        """
+        Compute a temperature-scaled softmin across the specified dimension,
+        with temperature analytically derived to guarantee a minimum probability.
+        """
+        if dim != 2:
+            cost = cost.transpose(dim, 2)
+
+        B, N, M = cost.shape
+        flat = cost.reshape(-1, M)
+
+        min_vals = flat.min(dim=1, keepdim=True).values
+        flat = flat - min_vals
+
+        top2_vals, _ = flat.topk(2, dim=1, largest=False)
+        gaps = top2_vals[:, 1] + margin
+        T = -torch.log(torch.tensor((1 - self.min_softmax_value) / (M - 1), device=cost.device, dtype=cost.dtype)) / gaps
+
+        scaled = -flat * T[:, None]
+        softmaxed = torch.softmax(scaled, dim=1)
+
+        all_equal = (top2_vals[:, 1] == 0)
+        if all_equal.any():
+            uniform = torch.full((M,), 1.0 / M, device=cost.device, dtype=cost.dtype)
+            softmaxed[all_equal] = uniform
+
+        out = softmaxed.view(B, N, M)
+        if dim != 2:
+            out = out.transpose(2, dim)
+
+        return out
+
+    @torch.no_grad()
+    def _sinkhorn(self, P: Tensor, iterations: int = 20) -> Tensor:
+        """Performs Sinkhorn normalization on a soft assignment matrix."""
+        for _ in range(iterations):
+            P = P / (P.sum(dim=2, keepdim=True) + self.eps)
+            P = P / (P.sum(dim=1, keepdim=True) + self.eps)
         return P
 
-    @torch.no_grad()
-    def _sharpen_and_threshold(self, prob_matrix: Tensor) -> Tensor:
-        """Applies sharpening and sparsity constraint via top-k filtering."""
-        P_sharp = (prob_matrix + self.eps).pow(self.sharpness)
-
-        topk_vals, topk_idx = torch.topk(P_sharp, self.top_k, dim=-1)
-        mask = torch.zeros_like(P_sharp).scatter_(-1, topk_idx, 1.0)
-
-        P_filtered = prob_matrix * mask
-        P_filtered = P_filtered / (P_filtered.sum(dim=-1, keepdim=True) + self.eps)
-
-        return P_filtered
-
-    def forward(self, pred: Tensor, gt: Tensor) -> Tensor:
+    def forward(self, predicted: Tensor, ground_truth: Tensor) -> Tensor:
         """
-        Computes the APML loss between predicted and ground truth point sets.
+        Compute the Adaptive Probabilistic Matching Loss between predicted and ground truth point clouds.
 
         Args:
-            pred: Tensor of shape [B, N, 3], predicted point cloud
-            gt: Tensor of shape [B, M, 3], ground truth point cloud
+            predicted: Tensor of shape [B, N, 3]
+            ground_truth: Tensor of shape [B, M, 3]
 
         Returns:
             Scalar loss value
         """
-        dist_matrix = torch.cdist(pred, gt, p=2)  # Shape: [B, N, M]
-        sim_matrix = torch.exp(-dist_matrix / self.tau)
+        cost = torch.cdist(predicted.float(), ground_truth.float(), p=2)  # [B, N, M]
 
         with torch.no_grad():
-            P = self._sinkhorn_iterations(sim_matrix)
-            P = self._sharpen_and_threshold(P)
+            P1 = self._softmin_with_min_probability(cost, dim=2)
+            P2 = self._softmin_with_min_probability(cost, dim=1)
+            P = 0.5 * (P1 + P2)
+            P = self._sinkhorn(P)
 
-        loss = torch.sum(P * dist_matrix, dim=(1, 2)).mean()
+        loss = torch.sum(P * cost, dim=(1, 2)).mean()
         return loss
