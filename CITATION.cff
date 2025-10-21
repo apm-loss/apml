@@ -1,0 +1,57 @@
+cff-version: 1.2.0
+message: "If you use this software or results derived from it, please cite both the software and the paper."
+title: "APML and CUDA-APML: Adaptive Probabilistic Matching Loss for 3D Point Clouds"
+abstract: >
+  Reference implementations of APML (dense) and CUDA-APML (sparse) for training 3D
+  point cloud models. APML constructs a differentiable, near one-to-one transport
+  plan using adaptive softmax with Sinkhorn normalization. CUDA-APML provides a
+  sparse, COO-based GPU implementation with fused kernels for adaptive softmax,
+  bidirectional symmetrization, and Sinkhorn normalization to reduce memory use
+  and improve throughput.
+authors:
+  - family-names: Sharifipour
+    given-names: Sasan
+    affiliation: Center for Machine Vision and Signal Analysis (CMVS), University of Oulu, Finland
+  - family-names: Álvarez Casado
+    given-names: Constantino
+    affiliation: CMVS, University of Oulu, Finland
+  - family-names: Sabokrou
+    given-names: Mohammad
+    affiliation: Okinawa Institute of Science and Technology (OIST), Japan
+  - family-names: Bordallo López
+    given-names: Miguel
+    affiliation: CMVS, University of Oulu, Finland
+keywords:
+  - point clouds
+  - optimal transport
+  - Sinkhorn
+  - adaptive softmax
+  - APML
+  - CUDA
+  - sparse COO
+  - 3D reconstruction
+  - completion
+  - generation
+license: Apache-2.0
+repository-code: "https://github.com/Arritmic/apml"
+version: 0.1.0
+date-released: 2025-10-22
+type: software
+preferred-citation:
+  type: article
+  title: "APML: Adaptive Probabilistic Matching Loss for Robust 3D Point Cloud Reconstruction"
+  authors:
+    - family-names: Sharifipour
+      given-names: Sasan
+    - family-names: Álvarez Casado
+      given-names: Constantino
+    - family-names: Sabokrou
+      given-names: Mohammad
+    - family-names: Bordallo López
+      given-names: Miguel
+  year: 2025
+  journal: arXiv
+  identifiers:
+    - type: arXiv
+      value: 2509.08104
+  url: "https://arxiv.org/abs/2509.08104"
