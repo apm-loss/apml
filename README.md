@@ -9,7 +9,8 @@ This repository contains the implementation of the **Adaptive Probabilistic Matc
 ![cover](docs/images/apml_comparison.png)
 
 
-[**[Paper]**](https://github.com/apm-loss) - Coming! Not share for anonymization purposes during review process.
+[**[Paper]**](https://arxiv.org/abs/2509.08104) - Sharifipour, Sasan, Constantino Álvarez Casado, Mohammad Sabokrou, and Miguel Bordallo López. "APML: Adaptive Probabilistic Matching Loss for Robust 3D Point Cloud Reconstruction." arXiv preprint arXiv:2509.08104 (2025).
+
 
 [**[Pretrained Models]**](https://drive.google.com/file/d/1dSuBUrZQzAWsxYH6j_EP-EAhgsRfvP5t/view?usp=sharing) - Available checkpoints files for testing.
 
@@ -52,6 +53,14 @@ apml/
 └── README.md                   # Main project documentation with usage instructions
 
 ```
+## Citation
+
+```
+Sharifipour, Sasan, Constantino Álvarez Casado, Mohammad Sabokrou, and Miguel Bordallo López.
+"APML: Adaptive Probabilistic Matching Loss for Robust 3D Point Cloud Reconstruction."
+arXiv preprint arXiv:2509.08104 (2025).
+```
 
 ## License
 This project is licensed under the MIT License
+
