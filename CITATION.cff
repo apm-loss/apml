@@ -32,7 +32,7 @@ keywords:
   - 3D reconstruction
   - completion
   - generation
-license: Apache-2.0
+license: MIT
 repository-code: "https://github.com/Arritmic/apml"
 version: 0.1.0
 date-released: 2025-10-22
@@ -50,8 +50,7 @@ preferred-citation:
     - family-names: Bordallo López
       given-names: Miguel
   year: 2025
-  journal: arXiv
   identifiers:
     - type: arXiv
       value: 2509.08104
-  url: "https://arxiv.org/abs/2509.08104"
+  url: "https://github.com/Arritmic/apml"
