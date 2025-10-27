@@ -7,7 +7,6 @@
 [![NeurIPS 2025](https://img.shields.io/badge/NeurIPS-2025-blueviolet)](https://neurips.cc/virtual/2025/poster/118183)
 
 > **News**: Accepted at NeurIPS 2025 (Poster). The repository includes both a pure-PyTorch APML and a CUDA-accelerated APML (sparse) implementation.
-> The repository includes both a **pure PyTorch APML** and a **CUDA accelerated APML (sparse)** implementation.
 
 ![cover](docs/images/apml_comparison.png)
 
